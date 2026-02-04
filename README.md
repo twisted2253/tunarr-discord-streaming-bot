@@ -15,15 +15,15 @@ A Discord bot that runs on a machine able to connect to your local Tunarr webGUI
 - 👁️ **Current Channel Tracking** - Remembers last changed channel for quick status checks
 - 🎥 **YouTube Integration** - `/youtube [URL]` command to play videos (⚠️ experimental - still ironing out Discord streaming issues; YouTube Premium recommended to avoid ads)
 
-<img width="510" height="466" alt="image" src="https://github.com/user-attachments/assets/75614d56-7ba0-4051-a1b9-98f8fce57715" />
+<img width="514" height="354" alt="image" src="https://github.com/user-attachments/assets/cea024e3-f621-4ca0-8c9b-cb85a747ff4e" />
 
-<img width="542" height="476" alt="image" src="https://github.com/user-attachments/assets/d2880261-dfb1-4873-a336-3eecaac0ff5b" />
+<img width="578" height="460" alt="image" src="https://github.com/user-attachments/assets/7fa7372f-7320-4aa4-9e40-4448097b3459" />
 
-<img width="518" height="590" alt="image" src="https://github.com/user-attachments/assets/9dc96679-45cb-40e8-89b2-75268197ded5" />
+<img width="538" height="646" alt="image" src="https://github.com/user-attachments/assets/cb98f327-25ed-4e9c-a7c5-59f3170d6c9a" />
 
-<img width="498" height="276" alt="image" src="https://github.com/user-attachments/assets/721ab962-aefd-40bc-ae37-9d94c91f26bd" />
+<img width="480" height="312" alt="image" src="https://github.com/user-attachments/assets/833d52e6-954a-4148-a8a5-a2a0f2b7ed9e" />
 
-<img width="536" height="582" alt="image" src="https://github.com/user-attachments/assets/969377b8-83c5-4723-a38a-883bfac29286" />
+<img width="1054" height="702" alt="image" src="https://github.com/user-attachments/assets/f4f33211-e242-466d-8d31-81975965bf6b" />
 
 ## ⚠️ Important Notes
 
