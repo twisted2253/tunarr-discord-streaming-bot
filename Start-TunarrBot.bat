@@ -3,7 +3,7 @@ title TunarrBot System
 color 0A
 
 :: Change to the bot directory
-cd /d "C:\tunarr-bot"
+cd /d "%~dp0"
 
 :: Check if main files exist
 if not exist "tunarr-bot.js" goto :error_bot
@@ -75,7 +75,6 @@ echo   1. Press Ctrl+C (waits for graceful shutdown)
 echo   2. Or run Stop-TunarrBot.bat in another window
 echo   3. Or simply close this window (services will stop)
 echo.
-echo NOTE: Chrome will close automatically when you stop
 echo ============================================
 echo.
 
@@ -95,9 +94,6 @@ for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr ":3001"') do (
     taskkill /PID %%a /F >nul 2>&1
 )
 
-:: Kill any orphaned Chrome processes
-taskkill /IM chrome.exe /F >nul 2>&1
-
 echo Services stopped.
 echo.
 echo Check log files for details:
@@ -108,13 +104,13 @@ pause
 goto :end
 
 :error_bot
-echo [ERROR] tunarr-bot.js not found in C:\tunarr-bot
+echo [ERROR] tunarr-bot.js not found in this folder
 echo.
 pause
 goto :end
 
 :error_changer
-echo [ERROR] channel-changer.js not found in C:\tunarr-bot
+echo [ERROR] channel-changer.js not found in this folder
 echo.
 pause
 goto :end

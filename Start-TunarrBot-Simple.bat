@@ -9,7 +9,7 @@ echo ============================================
 echo.
 
 :: Change to the bot directory
-cd /d "C:\tunarr-bot"
+cd /d "%~dp0"
 
 :: Check if main files exist
 if not exist "tunarr-bot.js" goto :error_bot
@@ -182,12 +182,12 @@ echo [INFO] Services restarted.
 goto :monitor_loop
 
 :error_bot
-echo [ERROR] tunarr-bot.js not found in C:\tunarr-bot
+echo [ERROR] tunarr-bot.js not found in this folder
 pause
 goto :end
 
 :error_changer  
-echo [ERROR] channel-changer.js not found in C:\tunarr-bot
+echo [ERROR] channel-changer.js not found in this folder
 pause
 goto :end
 

@@ -81,6 +81,8 @@ if exist ".env" (
             echo GUILD_ID=your_discord_server_id_here
             echo TUNARR_BASE_URL=http://localhost:8000
             echo CHANNEL_CHANGER_URL=http://localhost:3001
+            echo CHANNEL_CHANGER_BIND_HOST=127.0.0.1
+            echo CHANNEL_CHANGER_API_KEY=
             echo YOUTUBE_PREMIUM_EMAIL=your-email@gmail.com
             echo TMDB_API_KEY=your_tmdb_api_key_here
         ) > .env

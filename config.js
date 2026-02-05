@@ -19,7 +19,9 @@ module.exports = {
     // Channel Changer Service Configuration
     channelChanger: {
         url: process.env.CHANNEL_CHANGER_URL || 'http://localhost:3001',
-        timeout: 60000 // milliseconds - allow longer channel change operations
+        timeout: 60000, // milliseconds - allow longer channel change operations
+        bindHost: process.env.CHANNEL_CHANGER_BIND_HOST || '127.0.0.1',
+        apiKey: process.env.CHANNEL_CHANGER_API_KEY || ''
     },
 
     // YouTube Configuration

@@ -23,17 +23,9 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3001"') do (
     echo Stopped process on port 3001
 )
 
-:: Also stop any Chrome instances that might be orphaned
 echo.
-echo Checking for orphaned Chrome processes...
-tasklist /FI "IMAGENAME eq chrome.exe" 2>NUL | find /I /N "chrome.exe">NUL
-if "%ERRORLEVEL%"=="0" (
-    echo Found Chrome processes, stopping...
-    taskkill /IM chrome.exe /F >nul 2>&1
-    echo Chrome stopped
-) else (
-    echo No Chrome processes found
-)
+echo NOTE: Chrome windows are not force-closed by this script.
+echo Close the Tunarr Chrome window manually if needed.
 
 echo.
 echo ============================================

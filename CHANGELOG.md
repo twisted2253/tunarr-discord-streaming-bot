@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to the Tunarr Discord Bot project.
 
+## [0.1.2] - 2026-02-04
+
+### Security Hardening
+- **Channel Changer binds to localhost** - Express server now listens on `127.0.0.1` by default instead of all interfaces, preventing external network access
+- **Optional API key authentication** - New `CHANNEL_CHANGER_API_KEY` environment variable to require authentication for Channel Changer endpoints (health check excluded)
+- **CORS restricted to localhost** - Channel Changer now only accepts requests from `localhost` and `127.0.0.1` origins instead of all origins
+- **Chrome remote debugging locked to localhost** - Added `--remote-debugging-address=127.0.0.1` to prevent remote access to Chrome DevTools Protocol
+- **API key forwarded from Discord bot** - All axios calls from `tunarr-bot.js` to Channel Changer include `x-api-key` header when configured
+
+### Usability
+- **Portable launch scripts** - All batch files (`Start-TunarrBot.bat`, `Start-TunarrBot-Simple.bat`) now use `%~dp0` instead of hardcoded `C:\tunarr-bot` path
+- **Removed "kill all Chrome" behavior** - `Start-TunarrBot.bat` and `Stop-TunarrBot.bat` no longer force-close all Chrome processes on the system
+
+### Project
+- **Added LICENSE** - ISC license added (matches package.json)
+- **Fixed package.json main** - Corrected `"main"` from `"index.js"` to `"tunarr-bot.js"`
+- **Security documentation** - Added security notes section to README.md
+- **New environment variables documented** - `CHANNEL_CHANGER_BIND_HOST` and `CHANNEL_CHANGER_API_KEY` added to `.env.template`, README.md, and SETUP.md
+- **Version bump** - Updated version references in package.json, tunarr-bot.js header, and README.md
+
 ## [0.1.1] - 2026-02-04
 
 ### Fixed

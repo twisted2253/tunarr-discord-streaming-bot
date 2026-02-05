@@ -29,6 +29,12 @@ A Discord bot that runs on a machine able to connect to your local Tunarr webGUI
 
 **Tunarr Filler Content**: This bot was developed and tested **without using Tunarr's "filler" content feature** (commercials, bumpers, etc.). If you use filler content in your Tunarr channels, your mileage may vary (YMMV) - timing calculations and program detection may behave differently. Filler content support is planned for future testing and configuration.
 
+## ⚠️ Security Notes
+
+- Channel Changer binds to `127.0.0.1` by default (local machine only).
+- Set `CHANNEL_CHANGER_API_KEY` in `.env` if you want to require an API key for Channel Changer endpoints.
+- Chrome automation uses reduced-security flags for compatibility; only run on a trusted machine/network.
+
 ## 🚀 Quick Start (Windows)
 
 **Recommended Installation Directory**: `C:\tunarr-bot\`
@@ -61,6 +67,8 @@ When the setup menu appears, choose **Option 1** to edit `.env` and fill in:
 - **DISCORD_CLIENT_ID** - Your application ID (same portal)
 - **GUILD_ID** - Your Discord server ID ([How to get](https://support.discord.com/hc/en-us/articles/206346498))
 - **TUNARR_BASE_URL** - Your Tunarr server (e.g., `http://192.168.1.100:8000`)
+- **CHANNEL_CHANGER_BIND_HOST** - *(Optional)* Bind Channel Changer to localhost (recommended: `127.0.0.1`)
+- **CHANNEL_CHANGER_API_KEY** - *(Optional)* Require an API key for Channel Changer endpoints
 - **TMDB_API_KEY** - *(Optional)* For movie/TV posters from [TMDB](https://www.themoviedb.org/settings/api)
 
 > 💡 **Don't have a Discord bot yet?** See our [detailed setup guide](docs/SETUP.md) for step-by-step Discord bot creation instructions.
@@ -318,7 +326,7 @@ For more help, see [Troubleshooting Guide](docs/TROUBLESHOOTING.md) or check the
 
 ## 📝 Version
 
-**Current Version**: 0.1.1 (2026-02-04)
+**Current Version**: 0.1.2 (2026-02-04)
 - Fixed critical program detection bug (GitHub Issue #1) - now uses Guide API with accurate timestamps
 - Program timing calculations now match Tunarr web GUI exactly (no more "Time Left: 0 minutes")
 - "Up Next" program detection accurate and reliable

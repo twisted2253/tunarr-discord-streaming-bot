@@ -82,6 +82,8 @@ GUILD_ID=your_discord_server_id
 # Tunarr Server Configuration (Required)
 TUNARR_BASE_URL=http://192.168.1.100:8000
 CHANNEL_CHANGER_URL=http://localhost:3001
+CHANNEL_CHANGER_BIND_HOST=127.0.0.1
+CHANNEL_CHANGER_API_KEY=
 
 # TMDB Configuration (Optional)
 TMDB_API_KEY=your_tmdb_api_key_here
@@ -93,6 +95,8 @@ LOG_LEVEL=info
 **Configuration Notes**:
 - Replace `192.168.1.100:8000` with your actual Tunarr server IP and port
 - If Tunarr is on the same machine, use `http://localhost:8000`
+- CHANNEL_CHANGER_BIND_HOST controls which interface the Channel Changer listens on (recommended: `127.0.0.1`)
+- CHANNEL_CHANGER_API_KEY is optional but recommended to lock down channel changer endpoints
 - TMDB_API_KEY is optional but highly recommended for poster images
 
 ### 7. Update config.js Settings

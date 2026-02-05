@@ -70,8 +70,31 @@ class ChannelChanger {
     }
 
     setupExpress() {
-        this.app.use(cors());
+        const allowedOrigins = [
+            'http://localhost',
+            'http://127.0.0.1'
+        ];
+        this.app.use(cors({ origin: allowedOrigins }));
         this.app.use(express.json());
+
+        const apiKey = config.channelChanger?.apiKey || process.env.CHANNEL_CHANGER_API_KEY;
+        if (apiKey) {
+            this.app.use((req, res, next) => {
+                if (req.path === '/health') return next();
+
+                const headerKey = req.get('x-api-key');
+                const authHeader = req.get('authorization');
+                const bearerKey = authHeader && authHeader.toLowerCase().startsWith('bearer ')
+                    ? authHeader.slice(7)
+                    : null;
+
+                if (headerKey === apiKey || bearerKey === apiKey) {
+                    return next();
+                }
+
+                return res.status(401).json({ error: 'Unauthorized' });
+            });
+        }
         
         // Health check endpoint
         this.app.get('/health', (req, res) => {
@@ -613,6 +636,7 @@ class ChannelChanger {
                 const args = [...baseArgs];
                 if (typeof debugPort === 'number') {
                     args.push(`--remote-debugging-port=${debugPort}`);
+                    args.push('--remote-debugging-address=127.0.0.1');
                 }
                 return args;
             };
@@ -2960,8 +2984,9 @@ class ChannelChanger {
     }
 
     async start() {
-        this.app.listen(PORT, () => {
-            this.logger.info(`🎬 Enhanced Channel Changer v2 running on port ${PORT}`);
+        const bindHost = config.channelChanger?.bindHost || '127.0.0.1';
+        this.app.listen(PORT, bindHost, () => {
+            this.logger.info(`🎬 Enhanced Channel Changer v2 running on ${bindHost}:${PORT}`);
             this.logger.info(`📊 Health check: http://localhost:${PORT}/health`);
             this.logger.info(`🔍 Debug info: http://localhost:${PORT}/debug`);
             this.logger.info(`🏥 Browser health: http://localhost:${PORT}/browser-health`);

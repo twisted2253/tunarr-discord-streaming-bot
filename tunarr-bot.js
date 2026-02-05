@@ -1,5 +1,5 @@
 // ============================================================================
-// TUNARR DISCORD BOT - VERSION 0.0.9 - 2025-08-15 - ENHANCED EDITION
+// TUNARR DISCORD BOT - VERSION 0.1.2 - 2026-02-04 - ENHANCED EDITION
 // ============================================================================
 // IMPORTS AND DEPENDENCIES
 // ============================================================================
@@ -53,7 +53,7 @@ class TunarrDiscordBot {
     // ========================================================================
     setupEventHandlers() {
         this.client.once('ready', () => {
-            this.logger.info(`Enhanced TunarrBot v0.0.9 ready! Logged in as ${this.client.user.tag}`);
+            this.logger.info(`Enhanced TunarrBot v0.1.2 ready! Logged in as ${this.client.user.tag}`);
 
             // Start announcement monitoring if enabled
             if (config.announcements?.enableNowPlayingAnnouncements) {
@@ -375,7 +375,8 @@ class TunarrDiscordBot {
     async fetchYouTubeVideoInfo() {
         try {
             const response = await axios.get(`${config.channelChanger.url}/youtube-info`, {
-                timeout: config.channelChanger.timeout
+                timeout: config.channelChanger.timeout,
+                headers: this.getChannelChangerHeaders()
             });
             
             if (response.data.isOnYouTube) {
@@ -391,6 +392,11 @@ class TunarrDiscordBot {
             await this.logger.error('Error fetching YouTube info', error);
             return null;
         }
+    }
+
+    getChannelChangerHeaders() {
+        const apiKey = config.channelChanger?.apiKey || process.env.CHANNEL_CHANGER_API_KEY;
+        return apiKey ? { 'x-api-key': apiKey } : {};
     }
 
     formatYouTubeDuration(seconds) {
@@ -413,7 +419,8 @@ class TunarrDiscordBot {
     async checkBrowserHealth() {
         try {
             const response = await axios.get(`${config.channelChanger.url}/browser-health`, {
-                timeout: 10000 // 10 second timeout for health check
+                timeout: 10000, // 10 second timeout for health check
+                headers: this.getChannelChangerHeaders()
             });
             return response.data;
         } catch (error) {
@@ -431,7 +438,8 @@ class TunarrDiscordBot {
             const response = await axios.post(`${config.channelChanger.url}/browser-recovery`, {
                 method: method
             }, {
-                timeout: 30000 // 30 second timeout for recovery
+                timeout: 30000, // 30 second timeout for recovery
+                headers: this.getChannelChangerHeaders()
             });
             return response.data;
         } catch (error) {
@@ -1363,7 +1371,10 @@ class TunarrDiscordBot {
                 await axios.post(`${config.channelChanger.url}/change-channel`, {
                     channelId: channel.id,
                     url: changeUrl
-                }, { timeout: config.channelChanger.timeout });
+                }, { 
+                    timeout: config.channelChanger.timeout,
+                    headers: this.getChannelChangerHeaders()
+                });
                 
                 // Track the current channel and reset YouTube state
                 this.currentChannelId = channel.id;
@@ -1529,7 +1540,10 @@ class TunarrDiscordBot {
             // Send YouTube navigation request
             await axios.post(`${config.channelChanger.url}/navigate-youtube`, {
                 url: youtubeUrl
-            }, { timeout: config.channelChanger.timeout });
+            }, { 
+                timeout: config.channelChanger.timeout,
+                headers: this.getChannelChangerHeaders()
+            });
             
             // Update bot state
             this.currentChannelId = null; // Clear current channel
@@ -1594,7 +1608,10 @@ class TunarrDiscordBot {
             // Send subtitle control request to Channel Changer
             const response = await axios.post(`${config.channelChanger.url}/youtube-subtitles`, {
                 action: action
-            }, { timeout: config.channelChanger.timeout });
+            }, { 
+                timeout: config.channelChanger.timeout,
+                headers: this.getChannelChangerHeaders()
+            });
 
             if (response.data.success) {
                 let responseMessage = '';
@@ -1918,7 +1935,8 @@ class TunarrDiscordBot {
         try {
             // Send YouTube login navigation request
             await axios.post(`${config.channelChanger.url}/youtube-login`, {}, { 
-                timeout: config.channelChanger.timeout 
+                timeout: config.channelChanger.timeout,
+                headers: this.getChannelChangerHeaders()
             });
             
             let responseMessage = `✅ **YouTube Login Page Loaded!**\n\n`;
@@ -2468,7 +2486,10 @@ class TunarrDiscordBot {
             await axios.post(`${config.channelChanger.url}/change-channel`, {
                 channelId: channel.id,
                 url: changeUrl
-            }, { timeout: config.channelChanger.timeout });
+            }, { 
+                timeout: config.channelChanger.timeout,
+                headers: this.getChannelChangerHeaders()
+            });
 
             this.lastReloadTime = Date.now();
             await this.logger.info(`Auto-reload successful: Refreshed ${channel.name} at ${new Date().toLocaleString()}`);
