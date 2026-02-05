@@ -38,15 +38,14 @@ A Discord bot that runs on a machine able to connect to your local Tunarr webGUI
 ## 🚀 Quick Start (Windows)
 
 **Recommended Installation Directory**: `C:\tunarr-bot\`
-> The included .bat launcher files are pre-configured for this path. If you install elsewhere, you'll need to edit the .bat files.
+> Avoid `C:\Program Files\` — it’s write‑protected and untested. A normal folder like `C:\tunarr-bot\` or inside your user profile works best.
 
 ### Step 1: Download the Project from GitHub
 1. On this GitHub page, click the green **"Code"** button in the upper-right corner
 2. Click **"Download ZIP"** from the dropdown menu
 3. Once downloaded, **extract all 17 files/folders** from the ZIP
-4. Move the extracted contents to `C:\tunarr-bot\`
+4. Move the extracted contents to `C:\tunarr-bot\` (recommended, but not required)
    - Your folder should now contain: `tunarr-bot.js`, `channel-changer.js`, `Setup-TunarrBot.bat`, etc.
-   - ⚠️ If using a different directory, you'll need to manually edit the `.bat` files to update the path
 
 ### Step 2: Install Node.js
 1. Download and install [Node.js](https://nodejs.org) (v18 or higher)

@@ -73,6 +73,8 @@ npm install
 
 Create a `.env` file in the project root directory:
 
+> **Note:** Avoid installing in `C:\Program Files\` — it’s write‑protected and untested. Use a normal folder like `C:\tunarr-bot\` or your user profile.
+
 ```env
 # Discord Configuration (Required)
 DISCORD_TOKEN=your_bot_token_here
