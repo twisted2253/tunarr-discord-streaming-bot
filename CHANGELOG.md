@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to the Tunarr Discord Bot project.
 
+## [0.1.3] - 2026-03-04
+
+### Fixed
+- **Channel lookup matches wrong channel when input is numeric (Issue #2)** - `/change`, `/channel`, and `/set-current` commands would incorrectly match a channel whose **name contained** the numeric input as a substring instead of finding the channel with that exact number
+  - **Example**: `/change 201` would match a channel named "Horror (2010's)" because `"2010"` contains `"201"`, switching to the wrong channel
+  - **Root cause**: `channels.find()` checked `name.includes(input)` first — since `Array.find()` returns the first match, any channel with the number in its name won was found before the correct channel-by-number match
+  - **Fix**: When the input is purely numeric, skip name matching entirely and only match by exact channel number or ID
+  - **Affected commands**: `/change`, `/channel`, `/set-current`
+
 ## [0.1.2] - 2026-02-04
 
 ### Security Hardening

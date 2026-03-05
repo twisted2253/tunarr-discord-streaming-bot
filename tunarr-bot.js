@@ -1,5 +1,5 @@
 // ============================================================================
-// TUNARR DISCORD BOT - VERSION 0.1.2 - 2026-02-04 - ENHANCED EDITION
+// TUNARR DISCORD BOT - VERSION 0.1.3 - 2026-03-04 - ENHANCED EDITION
 // ============================================================================
 // IMPORTS AND DEPENDENCIES
 // ============================================================================
@@ -53,7 +53,7 @@ class TunarrDiscordBot {
     // ========================================================================
     setupEventHandlers() {
         this.client.once('ready', () => {
-            this.logger.info(`Enhanced TunarrBot v0.1.2 ready! Logged in as ${this.client.user.tag}`);
+            this.logger.info(`Enhanced TunarrBot v0.1.3 ready! Logged in as ${this.client.user.tag}`);
 
             // Start announcement monitoring if enabled
             if (config.announcements?.enableNowPlayingAnnouncements) {
@@ -1218,9 +1218,10 @@ class TunarrDiscordBot {
         
         try {
             const channels = await this.fetchChannels();
-            const channel = channels.find(c => 
-                c.name.toLowerCase().includes(channelInput.toLowerCase()) || 
-                c.number.toString() === channelInput
+            const isNumericInput = /^\d+$/.test(channelInput.trim());
+            const channel = channels.find(c =>
+                c.number.toString() === channelInput.trim() ||
+                (!isNumericInput && c.name.toLowerCase().includes(channelInput.toLowerCase()))
             );
 
             if (!channel) {
@@ -1353,10 +1354,11 @@ class TunarrDiscordBot {
         
         try {
             const channels = await this.fetchChannels();
-            const channel = channels.find(c => 
-                c.name.toLowerCase().includes(channelInput.toLowerCase()) || 
-                c.number.toString() === channelInput ||
-                c.id === channelInput
+            const isNumericInput = /^\d+$/.test(channelInput.trim());
+            const channel = channels.find(c =>
+                c.number.toString() === channelInput.trim() ||
+                c.id === channelInput.trim() ||
+                (!isNumericInput && c.name.toLowerCase().includes(channelInput.toLowerCase()))
             );
 
             if (!channel) {
@@ -2228,11 +2230,11 @@ class TunarrDiscordBot {
 
             const channelInput = interaction.options.getString('channel');
             const channels = await this.fetchChannels();
-            
-            const channel = channels.find(c => 
-                c.name.toLowerCase().includes(channelInput.toLowerCase()) || 
-                c.number.toString() === channelInput ||
-                c.id === channelInput
+            const isNumericInput = /^\d+$/.test(channelInput.trim());
+            const channel = channels.find(c =>
+                c.number.toString() === channelInput.trim() ||
+                c.id === channelInput.trim() ||
+                (!isNumericInput && c.name.toLowerCase().includes(channelInput.toLowerCase()))
             );
 
             if (!channel) {

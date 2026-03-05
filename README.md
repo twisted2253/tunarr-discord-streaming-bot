@@ -325,13 +325,9 @@ For more help, see [Troubleshooting Guide](docs/TROUBLESHOOTING.md) or check the
 
 ## 📝 Version
 
-**Current Version**: 0.1.2 (2026-02-04)
-- Fixed critical program detection bug (GitHub Issue #1) - now uses Guide API with accurate timestamps
-- Program timing calculations now match Tunarr web GUI exactly (no more "Time Left: 0 minutes")
-- "Up Next" program detection accurate and reliable
-- Comprehensive logging system with file rotation and 5 log levels
-- AI-friendly documentation with complete code navigation guides
-- Enhanced error handling and structured logging throughout
+**Current Version**: 0.1.3 (2026-03-04)
+- Fixed channel lookup bug (GitHub Issue #2) - `/change`, `/channel`, and `/set-current` no longer match channels whose name contains the number as a substring
+- Numeric input now only matches by exact channel number or ID
 
 See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
