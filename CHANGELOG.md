@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to the Tunarr Discord Bot project.
 
+## [0.1.6] - 2026-05-28
+
+### Added
+- **Starring / cast in program embeds** - All four embed surfaces (`/change`, `/channel`, `/current`, channel change announcements) now show a `Starring:` line with up to 4 actors (configurable via `config.tmdb.maxActors`). Cast is fetched directly from TMDB using the TMDB ID embedded in the Tunarr program metadata — no extra title search required. Toggle with `config.tmdb.showActors`.
+
+### Fixed
+- **Channel change announcement now matches `/change` confirmation** - `announceChannelChange` now outputs the same fields as the `/change` command: current program summary, time range, `📊 Current Program Details` (rating, duration, time left, time, starring), `🔜 UP NEXT` with next program summary and next program details.
+
+### Changed
+- **Playback timing defaults reduced** — `tunarrBufferWait` 15000→1000ms, `youtubeBufferWait` 3000→1000ms, `controlsHideDelay` 2000→500ms, `postFullscreenStabilization` 3000→1000ms. Values reflect tested working timings.
+
 ## [0.1.5] - 2026-05-28
 
 ### Fixed

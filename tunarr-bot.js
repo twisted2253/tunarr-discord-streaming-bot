@@ -461,6 +461,34 @@ class TunarrDiscordBot {
             .trim();
     }
 
+    getTmdbId(meta) {
+        if (!meta) return null;
+        if (meta.type === 'episode') {
+            const id = meta.show?.identifiers?.find(i => i.type === 'tmdb')?.id;
+            return id ? { id, mediaType: 'tv' } : null;
+        }
+        const id = meta.identifiers?.find(i => i.type === 'tmdb')?.id;
+        return id ? { id, mediaType: 'movie' } : null;
+    }
+
+    async fetchTMDBCast(tmdbId, mediaType) {
+        try {
+            const apiKey = config.tmdb?.apiKey || process.env.TMDB_API_KEY;
+            if (!apiKey || config.tmdb?.enabled === false || config.tmdb?.showActors === false) return null;
+
+            const url = `https://api.themoviedb.org/3/${mediaType}/${tmdbId}/credits?api_key=${apiKey}`;
+            const response = await axios.get(url, { timeout: 5000 });
+            const cast = response.data?.cast;
+            if (!cast || cast.length === 0) return null;
+
+            const max = config.tmdb?.maxActors || 4;
+            return cast.slice(0, max).map(a => a.name);
+        } catch (error) {
+            await this.logger.debug(`TMDB cast fetch failed for ${mediaType}/${tmdbId}: ${error.message}`);
+            return null;
+        }
+    }
+
     async fetchTMDBImage(programTitle, programType = 'movie', programYear = null, programMeta = null) {
         try {
             const apiKey = config.tmdb?.apiKey || process.env.TMDB_API_KEY;
@@ -1290,7 +1318,13 @@ class TunarrDiscordBot {
                 const startTime = this.formatTime(current.startTime);
                 const endTime = this.formatTime(current.endTime);
                 currentDetails.push(`**Time:** ${startTime} - ${endTime}`);
-                
+
+                const tmdbInfo = this.getTmdbId(current);
+                if (tmdbInfo) {
+                    const cast = await this.fetchTMDBCast(tmdbInfo.id, tmdbInfo.mediaType);
+                    if (cast && cast.length > 0) currentDetails.push(`**Starring:** ${cast.join(', ')}`);
+                }
+
                 embed.addFields({
                     name: '📊 Current Program Details',
                     value: currentDetails.join('\n'),
@@ -1317,12 +1351,18 @@ class TunarrDiscordBot {
                     if (next.rating) nextDetails.push(`**Rating:** ${next.rating}`);
                     if (next.date) nextDetails.push(`**Year:** ${new Date(next.date).getFullYear()}`);
                     if (next.duration) nextDetails.push(`**Duration:** ${this.formatDuration(next.duration)}`);
-                    
+
+                    const nextTmdbInfo = this.getTmdbId(next);
+                    if (nextTmdbInfo) {
+                        const nextCast = await this.fetchTMDBCast(nextTmdbInfo.id, nextTmdbInfo.mediaType);
+                        if (nextCast && nextCast.length > 0) nextDetails.push(`**Starring:** ${nextCast.join(', ')}`);
+                    }
+
                     if (nextDetails.length > 0) {
                         embed.addFields({
-                            name: '📊 Next Program Details', 
-                            value: nextDetails.join('\n'), 
-                            inline: false 
+                            name: '📊 Next Program Details',
+                            value: nextDetails.join('\n'),
+                            inline: false
                         });
                     }
                     
@@ -1446,6 +1486,12 @@ class TunarrDiscordBot {
                     const endTime = this.formatTime(current.endTime);
                     currentDetails.push(`**Time:** ${startTime} - ${endTime}`);
 
+                    const tmdbInfo = this.getTmdbId(current);
+                    if (tmdbInfo) {
+                        const cast = await this.fetchTMDBCast(tmdbInfo.id, tmdbInfo.mediaType);
+                        if (cast && cast.length > 0) currentDetails.push(`**Starring:** ${cast.join(', ')}`);
+                    }
+
                     embed.addFields({
                         name: '📊 Current Program Details',
                         value: currentDetails.join('\n'),
@@ -1472,6 +1518,12 @@ class TunarrDiscordBot {
                         if (next.rating) nextDetails.push(`**Rating:** ${next.rating}`);
                         if (next.date) nextDetails.push(`**Year:** ${new Date(next.date).getFullYear()}`);
                         if (next.duration) nextDetails.push(`**Duration:** ${this.formatDuration(next.duration)}`);
+
+                        const nextTmdbInfo = this.getTmdbId(next);
+                        if (nextTmdbInfo) {
+                            const nextCast = await this.fetchTMDBCast(nextTmdbInfo.id, nextTmdbInfo.mediaType);
+                            if (nextCast && nextCast.length > 0) nextDetails.push(`**Starring:** ${nextCast.join(', ')}`);
+                        }
 
                         if (nextDetails.length > 0) {
                             embed.addFields({
@@ -2161,7 +2213,13 @@ class TunarrDiscordBot {
                 const startTime = this.formatTime(current.startTime);
                 const endTime = this.formatTime(current.endTime);
                 currentDetails.push(`**Time:** ${startTime} - ${endTime}`);
-                
+
+                const tmdbInfo = this.getTmdbId(current);
+                if (tmdbInfo) {
+                    const cast = await this.fetchTMDBCast(tmdbInfo.id, tmdbInfo.mediaType);
+                    if (cast && cast.length > 0) currentDetails.push(`**Starring:** ${cast.join(', ')}`);
+                }
+
                 embed.addFields({
                     name: '📊 Current Program Details',
                     value: currentDetails.join('\n'),
@@ -2188,12 +2246,18 @@ class TunarrDiscordBot {
                     if (next.rating) nextDetails.push(`**Rating:** ${next.rating}`);
                     if (next.date) nextDetails.push(`**Year:** ${new Date(next.date).getFullYear()}`);
                     if (next.duration) nextDetails.push(`**Duration:** ${this.formatDuration(next.duration)}`);
-                    
+
+                    const nextTmdbInfo = this.getTmdbId(next);
+                    if (nextTmdbInfo) {
+                        const nextCast = await this.fetchTMDBCast(nextTmdbInfo.id, nextTmdbInfo.mediaType);
+                        if (nextCast && nextCast.length > 0) nextDetails.push(`**Starring:** ${nextCast.join(', ')}`);
+                    }
+
                     if (nextDetails.length > 0) {
                         embed.addFields({
-                            name: '📊 Next Program Details', 
-                            value: nextDetails.join('\n'), 
-                            inline: false 
+                            name: '📊 Next Program Details',
+                            value: nextDetails.join('\n'),
+                            inline: false
                         });
                     }
                     
@@ -2364,14 +2428,30 @@ class TunarrDiscordBot {
             if (current) {
                 embed.setDescription(`🎬 **NOW PLAYING: ${this.formatProgramTitle(current)}**`);
 
+                if (current.summary) {
+                    embed.addFields({
+                        name: '📊 Summary',
+                        value: current.summary.substring(0, config.behavior.maxSummaryLength),
+                        inline: false
+                    });
+                }
+
                 const currentDetails = [];
                 if (current.rating) currentDetails.push(`**Rating:** ${current.rating}`);
-                if (current.date) currentDetails.push(`**Year:** ${new Date(current.date).getFullYear()}`);
                 currentDetails.push(`**Duration:** ${this.formatDuration(current.duration)}`);
                 currentDetails.push(`**Time Left:** ${current.timeLeft} minutes`);
+                const startTime = this.formatTime(current.startTime);
+                const endTime = this.formatTime(current.endTime);
+                currentDetails.push(`**Time:** ${startTime} - ${endTime}`);
+
+                const tmdbInfo = this.getTmdbId(current);
+                if (tmdbInfo) {
+                    const cast = await this.fetchTMDBCast(tmdbInfo.id, tmdbInfo.mediaType);
+                    if (cast && cast.length > 0) currentDetails.push(`**Starring:** ${cast.join(', ')}`);
+                }
 
                 embed.addFields({
-                    name: '📊 Details',
+                    name: '📊 Current Program Details',
                     value: currentDetails.join('\n'),
                     inline: false
                 });
@@ -2379,13 +2459,39 @@ class TunarrDiscordBot {
                 if (next) {
                     const nextStartTime = this.formatTime(next.startTime);
                     embed.addFields({
-                        name: `🔜 Up Next`,
-                        value: `**${this.formatProgramTitle(next)}**\nStarts at ${nextStartTime} (in ${next.startsIn} minutes)`,
+                        name: `🔜 UP NEXT: ${this.formatProgramTitle(next)}`,
+                        value: `**Starts at:** ${nextStartTime} (in ${next.startsIn} minutes)`,
                         inline: false
                     });
+
+                    if (next.summary) {
+                        embed.addFields({
+                            name: '📊 Next Program Summary',
+                            value: next.summary.substring(0, config.behavior.maxSummaryLength),
+                            inline: false
+                        });
+                    }
+
+                    const nextDetails = [];
+                    if (next.rating) nextDetails.push(`**Rating:** ${next.rating}`);
+                    if (next.duration) nextDetails.push(`**Duration:** ${this.formatDuration(next.duration)}`);
+
+                    const nextTmdbInfo = this.getTmdbId(next);
+                    if (nextTmdbInfo) {
+                        const nextCast = await this.fetchTMDBCast(nextTmdbInfo.id, nextTmdbInfo.mediaType);
+                        if (nextCast && nextCast.length > 0) nextDetails.push(`**Starring:** ${nextCast.join(', ')}`);
+                    }
+
+                    if (nextDetails.length > 0) {
+                        embed.addFields({
+                            name: '📊 Next Program Details',
+                            value: nextDetails.join('\n'),
+                            inline: false
+                        });
+                    }
                 }
 
-                // Add poster if enabled
+                // Add poster
                 if (config.announcements.includePoster) {
                     const programYear = current.year || (current.date ? new Date(current.date).getFullYear() : null);
                     const tmdbImage = await this.fetchTMDBImage(this.formatProgramTitle(current), current.type, programYear, current);

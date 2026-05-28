@@ -55,23 +55,25 @@ module.exports = {
 	// Video Playback Configuration
     playback: {
         // Buffer wait times (in milliseconds)
-        tunarrBufferWait: 15000, // How long to wait for Tunarr video to buffer before fullscreen (default: 15 seconds)
-        youtubeBufferWait: 3000,  // How long to wait for YouTube video to buffer before fullscreen (default: 3 seconds)
-        
+        tunarrBufferWait: 1000,   // How long to wait for Tunarr video to buffer before fullscreen
+        youtubeBufferWait: 1000,  // How long to wait for YouTube video to buffer before fullscreen
+
         // Fullscreen timing adjustments
-        fullscreenDelay: 500,     // Delay before attempting fullscreen (default: 0.5 seconds)
-        resumePlaybackDelay: 1000, // Delay before resuming playback after fullscreen (default: 1 second)
-        controlsHideDelay: 2000,  // Delay before hiding controls after fullscreen (default: 2 seconds)
-        
+        fullscreenDelay: 500,     // Delay before attempting fullscreen
+        resumePlaybackDelay: 1000, // Delay before resuming playback after fullscreen
+        controlsHideDelay: 500,   // Delay before hiding controls after fullscreen
+
         // Stability settings
-        postFullscreenStabilization: 3000, // Time to wait after fullscreen for video to stabilize (default: 3 seconds)
+        postFullscreenStabilization: 1000, // Time to wait after fullscreen for video to stabilize
     },
 
     // TMDB Configuration (for movie/show posters)
     tmdb: {
-        apiKey: process.env.TMDB_API_KEY, 
+        apiKey: process.env.TMDB_API_KEY,
         enabled: true, // Set to false to disable TMDB posters
         showNextPoster: false, // Set to false to only show current program poster
+        showActors: true, // Show "Starring:" line in embeds
+        maxActors: 4, // Number of actors to display (3-5 recommended)
     },
 	
     // Chrome Browser Configuration
