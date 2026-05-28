@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to the Tunarr Discord Bot project.
 
+## [0.1.4] - 2026-05-27
+
+### Fixed
+- **Tunarr 1.3.x watch page regression** - The Tunarr web player (`/web/channels/{uuid}/watch`) stopped loading video in Chromium due to an upstream HLS Direct v2 frontend bug where the player JS makes looping canceled requests to the `.m3u8` endpoint, resulting in a permanent black screen. This broke Puppeteer-based Discord streaming entirely.
+  - **Root cause**: Tunarr 1.3.x introduced HLS Direct v2 streaming; the watch page JS was updated but makes client-side aborted requests in a loop and never receives data. The stream endpoint itself (`/stream/channels/{uuid}.m3u8`) is healthy.
+  - **Fix**: Added a local HLS.js player page served by the channel-changer service at `/player?url=<stream_url>`. When `config.tunarr.useHlsPlayer` is `true`, Puppeteer navigates to this local page instead of the broken watch page. HLS.js feeds directly from the working stream endpoint.
+  - **Toggle**: Set `config.tunarr.useHlsPlayer = false` to revert to the native watch page once Tunarr upstream resolves the regression.
+  - All existing buffer-wait, fullscreen, and post-fullscreen stabilization logic is preserved unchanged.
+
 ## [0.1.3] - 2026-03-04
 
 ### Fixed
