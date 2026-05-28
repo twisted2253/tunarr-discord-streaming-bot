@@ -401,6 +401,15 @@ class ChannelChanger {
                 res.status(500).json({ error: error.message });
             }
         });
+
+        // Local HLS.js player — used as workaround for Tunarr 1.3.x watch page regression.
+        // Puppeteer navigates here instead of the broken /web/channels/{uuid}/watch page.
+        this.app.get('/player', (req, res) => {
+            const streamUrl = req.query.url;
+            if (!streamUrl) return res.status(400).send('Missing url parameter');
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.send(this.buildHlsPlayerHtml(streamUrl));
+        });
     }
 
     // ========================================================================
@@ -2306,6 +2315,54 @@ class ChannelChanger {
     // EXISTING TUNARR METHODS (keeping all the original functionality)
     // ========================================================================
 
+    buildStreamUrl(watchUrl) {
+        const channelId = this.extractChannelIdFromUrl(watchUrl);
+        if (!channelId) return null;
+        return `${TUNARR_BASE_URL}/stream/channels/${channelId}.m3u8`;
+    }
+
+    buildHlsPlayerHtml(streamUrl) {
+        const escapedSrc = JSON.stringify(streamUrl);
+        return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Tunarr Player</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+video { width: 100%; height: 100%; object-fit: contain; display: block; }
+</style>
+</head>
+<body>
+<video id="video" autoplay playsinline></video>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<script>
+(function () {
+    var video = document.getElementById('video');
+    var src = ${escapedSrc};
+    if (Hls.isSupported()) {
+        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
+        hls.loadSource(src);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function () { video.play().catch(function () {}); });
+        hls.on(Hls.Events.ERROR, function (event, data) {
+            if (data.fatal) {
+                if (data.type === Hls.ErrorTypes.NETWORK_ERROR) { hls.startLoad(); }
+                else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) { hls.recoverMediaError(); }
+                else { hls.destroy(); }
+            }
+        });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = src;
+        video.play().catch(function () {});
+    }
+})();
+</script>
+</body>
+</html>`;
+    }
+
     async changeChannel(newUrl) {
         try {
             await this.ensureBrowserAndPage();
@@ -2313,59 +2370,82 @@ class ChannelChanger {
                 throw new Error('Failed to connect to browser');
             }
 
-            await this.logger.info(`Navigating to: ${newUrl}`);
+            // When useHlsPlayer is enabled, navigate to the local HLS.js player page
+            // instead of the broken Tunarr 1.3.x watch page.
+            const useHlsPlayer = config?.tunarr?.useHlsPlayer || false;
+            let targetUrl = newUrl;
+            let usingHlsPlayer = false;
+
+            if (useHlsPlayer) {
+                const streamUrl = this.buildStreamUrl(newUrl);
+                if (streamUrl) {
+                    const bindHost = config.channelChanger?.bindHost || '127.0.0.1';
+                    targetUrl = `http://${bindHost}:${PORT}/player?url=${encodeURIComponent(streamUrl)}`;
+                    usingHlsPlayer = true;
+                    await this.logger.info(`🎬 HLS player mode: using local player`);
+                    await this.logger.info(`📡 Stream URL: ${streamUrl}`);
+                } else {
+                    await this.logger.warn('⚠️ HLS player: could not extract channel ID, falling back to watch page');
+                }
+            }
+
+            await this.logger.info(`Navigating to: ${targetUrl}`);
 
             try {
-                await this.page.goto(newUrl, { 
+                await this.page.goto(targetUrl, {
                     waitUntil: 'domcontentloaded',
-                    timeout: 30000 
+                    timeout: 30000
                 });
             } catch (error) {
                 if (this.isDetachedFrameError(error)) {
                     await this.logger.warn('Detached frame detected during navigation, retrying with a fresh page...');
                     await this.ensureBrowserAndPage();
-                    await this.page.goto(newUrl, { 
+                    await this.page.goto(targetUrl, {
                         waitUntil: 'domcontentloaded',
-                        timeout: 30000 
+                        timeout: 30000
                     });
                 } else {
                     throw error;
                 }
             }
 
-            // Verify navigation landed on the expected channel
-            const expectedChannelId = this.extractChannelIdFromUrl(newUrl);
-            const navigatedUrl = this.page.url();
-            if (expectedChannelId && !navigatedUrl.includes(expectedChannelId)) {
-                await this.logger.warn(`Navigation may not have switched channels. Expected ${expectedChannelId}, current URL: ${navigatedUrl}`);
-                await this.page.bringToFront();
-                await this.page.goto(newUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-                const retryUrl = this.page.url();
-                if (!retryUrl.includes(expectedChannelId)) {
-                    throw new Error(`Navigation did not switch to channel ${expectedChannelId}`);
+            // UUID-based URL verification only applies to the native watch page.
+            // When using the local HLS player the page URL is localhost:3001/player?url=...
+            // which won't contain the channel UUID.
+            if (!usingHlsPlayer) {
+                const expectedChannelId = this.extractChannelIdFromUrl(newUrl);
+                const navigatedUrl = this.page.url();
+                if (expectedChannelId && !navigatedUrl.includes(expectedChannelId)) {
+                    await this.logger.warn(`Navigation may not have switched channels. Expected ${expectedChannelId}, current URL: ${navigatedUrl}`);
+                    await this.page.bringToFront();
+                    await this.page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+                    const retryUrl = this.page.url();
+                    if (!retryUrl.includes(expectedChannelId)) {
+                        throw new Error(`Navigation did not switch to channel ${expectedChannelId}`);
+                    }
                 }
             }
 
             // Handle "Leave site?" popup automatically
             await this.handleLeaveDialog();
-            
+
             // Wait for video to load and be ready
             await this.waitForVideoReady();
-            
+
             // Run comprehensive debugging
             await this.debugVideoState();
-            
+
             // Try multiple fullscreen approaches
             const fullscreenSuccess = await this.attemptFullscreen();
-            
+
             this.currentUrl = newUrl;
             await this.logger.info(`Channel change complete! Fullscreen: ${fullscreenSuccess ? 'SUCCESS' : 'FAILED'}`);
-            
+
             return true;
-            
+
         } catch (error) {
             await this.logger.error(`Channel change failed: ${error.message}`);
-            
+
             // Try to recover
             try {
                 await this.logger.info('Attempting recovery...');

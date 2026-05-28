@@ -14,6 +14,10 @@ module.exports = {
         baseUrl: process.env.TUNARR_BASE_URL || 'http://localhost:8000',
         webPath: '/web/channels', // Path for browser URLs
         defaultChannel: null, // Optional: Set a default channel ID to track on startup
+        // Workaround for Tunarr 1.3.x watch page regression (canceled HLS request loop).
+        // When true, Puppeteer navigates to a local HLS.js player page instead of
+        // the broken /web/channels/{uuid}/watch page.
+        useHlsPlayer: true,
     },
 
     // Channel Changer Service Configuration
