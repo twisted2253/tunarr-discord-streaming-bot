@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to the Tunarr Discord Bot project.
 
+## [0.1.5] - 2026-05-28
+
+### Fixed
+- **Tunarr 1.3.x API response format change — program titles showing as "Unknown"** - Tunarr 1.3.x changed the guide and now_playing API responses to nest program metadata under a `.program` sub-object instead of at the top level. This caused all program titles, types, and years to be unreadable by the bot.
+  - `now_playing` response: title/type/year now read from `nowPlaying.program` instead of `nowPlaying` directly
+  - Guide endpoint: channel-specific guide (`/api/guide/channels/{id}`) now returns stripped lineup items with no titles; bot now falls through to the full guide endpoint which includes complete program metadata
+  - `formatProgramTitle()` updated to handle the new nested `program.program` structure for next-program lookups
+  - TMDB year lookup now reads `current.year` (new API field) in addition to the old `current.date` fallback — improves poster accuracy
+
+### Added
+- **Season and episode numbers in program titles** - TV episodes now display in `Show S01E01 - Episode Title` format (e.g. `Chappelle's Show S01E01 - Black White Supremacist`) using the new `season.index` and `episodeNumber` fields from the Tunarr 1.3.x API. Falls back gracefully when season/episode data is unavailable.
+
 ## [0.1.4] - 2026-05-27
 
 ### Fixed

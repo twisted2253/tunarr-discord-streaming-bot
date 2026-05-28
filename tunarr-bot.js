@@ -558,6 +558,13 @@ class TunarrDiscordBot {
     }
 
     getProgramWindow(program) {
+        // Tunarr 1.3.x guide format: { startTimeMs, lineupItem: { durationMs } }
+        if (program.startTimeMs !== undefined) {
+            const start = program.startTimeMs;
+            const durationMs = program.lineupItem?.durationMs ?? program.durationMs;
+            if (durationMs) return { start, stop: start + durationMs };
+        }
+
         const start = this.coerceTimestamp(program.start ?? program.startTime ?? program.startAt);
         const stop = this.coerceTimestamp(program.stop ?? program.stopTime ?? program.endTime ?? program.endAt);
 
@@ -580,6 +587,13 @@ class TunarrDiscordBot {
         if (!guideData) return null;
 
         if (Array.isArray(guideData)) {
+            // Tunarr 1.3.x: channel-specific guide returns a flat array of stripped lineup items
+            // { index, lineupItem: { id, durationMs }, startTimeMs } — no titles.
+            // Return null so the caller falls back to the full guide which has program metadata.
+            if (guideData.length === 0 || guideData[0]?.lineupItem !== undefined) {
+                return null;
+            }
+            // Older format: array of channel objects
             return guideData.find(c => c && (c.id === channelId || c.number?.toString?.() === channelId));
         }
 
@@ -647,7 +661,9 @@ class TunarrDiscordBot {
                 return await this.getCurrentAndNextProgramsManual(channelId);
             }
 
-            await this.logger.info(`Now playing: ${nowPlaying.title} (${nowPlaying.id})`);
+            // Tunarr 1.3.x wraps program metadata under nowPlaying.program
+            const programMeta = nowPlaying.program || nowPlaying;
+            await this.logger.info(`Now playing: ${programMeta.title} (${nowPlaying.id})`);
 
             const now = Date.now();
 
@@ -672,7 +688,12 @@ class TunarrDiscordBot {
                     const mergedDuration = Number(nowPlaying.duration) || currentProgram.duration || (programEndTime - programStartTime);
                     const mergedCurrent = {
                         ...currentProgram,
-                        ...nowPlaying,
+                        ...(currentProgram.program || {}), // flatten Tunarr 1.3.x nested metadata
+                        ...programMeta,                    // nowPlaying.program takes precedence
+                        start: nowPlaying.start,
+                        stop: nowPlaying.stop,
+                        isPaused: nowPlaying.isPaused || false,
+                        id: nowPlaying.id,
                         duration: mergedDuration
                     };
 
@@ -698,6 +719,7 @@ class TunarrDiscordBot {
                         },
                         next: nextProgram ? {
                             ...nextProgram,
+                            ...(nextProgram.program || {}), // flatten Tunarr 1.3.x nested metadata
                             startsIn: Math.max(0, Math.floor((nextStart - now) / 60000)),
                             startTime: new Date(nextStart),
                             endTime: new Date(nextEnd),
@@ -732,14 +754,15 @@ class TunarrDiscordBot {
 
             let currentProgramIndex = -1;
             if (programs.length > 0) {
+                const npTitle = programMeta.title;
                 currentProgramIndex = programs.findIndex(p => {
-                    const titleMatch = p.title === nowPlaying.title;
+                    const titleMatch = p.title === npTitle;
                     const durationMatch = Math.abs((p.duration || 0) - currentDuration) < 1000;
                     return titleMatch && durationMatch;
                 });
 
                 if (currentProgramIndex === -1) {
-                    currentProgramIndex = programs.findIndex(p => p.title === nowPlaying.title);
+                    currentProgramIndex = programs.findIndex(p => p.title === npTitle);
                 }
             }
 
@@ -747,13 +770,15 @@ class TunarrDiscordBot {
 
             return {
                 current: {
-                    ...nowPlaying,
+                    ...programMeta,
+                    start: nowPlaying.start ?? now,
+                    stop: nowPlaying.stop ?? approxEndTime,
                     timeLeft: approxTimeLeft,
                     isPaused: nowPlaying.isPaused || false,
-                    startTime: new Date(now),
-                    endTime: new Date(approxEndTime),
-                    start: now,
-                    stop: approxEndTime
+                    startTime: new Date(nowPlaying.start ?? now),
+                    endTime: new Date(nowPlaying.stop ?? approxEndTime),
+                    duration: currentDuration,
+                    id: nowPlaying.id
                 },
                 next: nextProgram ? {
                     ...nextProgram,
@@ -874,16 +899,25 @@ class TunarrDiscordBot {
     }
 
     formatProgramTitle(program) {
-        if (program.subtype === 'episode' || program.type === 'episode') {
-            const showTitle = program.grandparent?.title || program.showTitle || '';
-            const episodeTitle = program.title || '';
-            
-            if (showTitle && episodeTitle && showTitle !== episodeTitle) {
-                return `${showTitle} - ${episodeTitle}`;
-            }
+        // Tunarr 1.3.x: guide/now_playing wrap program metadata under .program
+        const meta = program.program || program;
+        const type = meta.type || program.type;
+        if (type === 'episode') {
+            const showTitle = meta.show?.title || meta.grandparent?.title || meta.showTitle || '';
+            const seasonNum = meta.season?.index;
+            const episodeNum = meta.episodeNumber;
+            const episodeTitle = meta.title || '';
+
+            const seCode = (seasonNum != null && episodeNum != null)
+                ? `S${String(seasonNum).padStart(2, '0')}E${String(episodeNum).padStart(2, '0')}`
+                : null;
+
+            if (showTitle && seCode && episodeTitle) return `${showTitle} ${seCode} - ${episodeTitle}`;
+            if (showTitle && seCode)                  return `${showTitle} ${seCode}`;
+            if (showTitle && episodeTitle)             return `${showTitle} - ${episodeTitle}`;
+            if (showTitle)                             return showTitle;
         }
-        
-        return program.title || 'Unknown';
+        return meta.title || 'Unknown';
     }
 
     // ========================================================================
@@ -1313,7 +1347,7 @@ class TunarrDiscordBot {
 
             // Try to get movie/show poster from TMDB for current program (thumbnail), fallback to channel icon
             if (current) {
-                const programYear = current.date ? new Date(current.date).getFullYear() : null;
+                const programYear = current.year || (current.date ? new Date(current.date).getFullYear() : null);
                 const tmdbImage = await this.fetchTMDBImage(this.formatProgramTitle(current), current.type, programYear, current);
                 if (tmdbImage) {
                     embed.setThumbnail(tmdbImage);
@@ -1467,7 +1501,7 @@ class TunarrDiscordBot {
 
                 // Try to get current program poster for thumbnail
                 if (current) {
-                    const programYear = current.date ? new Date(current.date).getFullYear() : null;
+                    const programYear = current.year || (current.date ? new Date(current.date).getFullYear() : null);
                     const tmdbImage = await this.fetchTMDBImage(this.formatProgramTitle(current), current.type, programYear, current);
                     if (tmdbImage) {
                         embed.setThumbnail(tmdbImage);
@@ -2185,7 +2219,7 @@ class TunarrDiscordBot {
 
             // Try to get movie/show poster from TMDB for current program (thumbnail), fallback to channel icon
             if (current) {
-                const programYear = current.date ? new Date(current.date).getFullYear() : null;
+                const programYear = current.year || (current.date ? new Date(current.date).getFullYear() : null);
                 const tmdbImage = await this.fetchTMDBImage(this.formatProgramTitle(current), current.type, programYear, current);
                 if (tmdbImage) {
                     embed.setThumbnail(tmdbImage);
@@ -2353,7 +2387,7 @@ class TunarrDiscordBot {
 
                 // Add poster if enabled
                 if (config.announcements.includePoster) {
-                    const programYear = current.date ? new Date(current.date).getFullYear() : null;
+                    const programYear = current.year || (current.date ? new Date(current.date).getFullYear() : null);
                     const tmdbImage = await this.fetchTMDBImage(this.formatProgramTitle(current), current.type, programYear, current);
                     if (tmdbImage) {
                         embed.setThumbnail(tmdbImage);
@@ -2416,7 +2450,7 @@ class TunarrDiscordBot {
 
             // Add poster if enabled
             if (config.announcements.includePoster) {
-                const programYear = current.date ? new Date(current.date).getFullYear() : null;
+                const programYear = current.year || (current.date ? new Date(current.date).getFullYear() : null);
                 const tmdbImage = await this.fetchTMDBImage(this.formatProgramTitle(current), current.type, programYear, current);
                 if (tmdbImage) {
                     embed.setThumbnail(tmdbImage);
